@@ -22,20 +22,22 @@ use App\Http\Controllers\Auth\RegisterController;
 Route::middleware('jwt.verify')->get('/user', [ LoginController::class, 'getAuthenticatedUser' ]);
 
 // Login Route
-Route::post('register', [ RegisterController::class , 'register']);
+Route::post('register', [ RegisterController::class , 'register'])->name('api.register');
 
 // Register Route
-Route::post('login', [ LoginController::class , 'authenticate']);
+Route::post('login', [ LoginController::class , 'authenticate'])->name('api.authenticate');
 
 
 // Issues Routes
 
 Route::middleware('jwt.verify')->group(function () {
     
-    Route::get('/issue/{issue}', [ IssueController::class, 'show' ]);
+    Route::get('/issue/{issue}', [ IssueController::class, 'show' ])->name('api.show');
 
-    Route::post('issue/{issue}/join',[ IssueController::class, 'join' ]);
+    Route::post('issue/{issue}/join',[ IssueController::class, 'join' ])->name('api.join');
     
-    Route::post('issue/{issue}/vote',[ IssueController::class, 'vote' ]);
+    Route::post('issue/{issue}/vote',[ IssueController::class, 'vote' ])->name('api.vote');
+    
+    Route::post('issue/{issue}/end-vote',[ IssueController::class, 'endVote' ])->name('api.end.vote');
 
 });

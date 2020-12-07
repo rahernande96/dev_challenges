@@ -13,6 +13,15 @@ class LoginController extends Controller
 {
     public function authenticate(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string|email',
+            'password' => 'required|string',
+        ]);
+
+        if($validator->fails()){
+                return response()->json($validator->errors()->toJson(), 400);
+        }
+
         $credentials = $request->only('email', 'password');
 
         try {

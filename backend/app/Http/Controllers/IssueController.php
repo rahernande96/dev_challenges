@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Validator;
 
 class IssueController extends Controller
 {    
@@ -65,6 +66,14 @@ class IssueController extends Controller
      */
     public function vote(Request $request, $issue)
     {
+        $validator = Validator::make($request->all(), [
+            'vote' => 'required|numeric',
+        ]);
+
+        if($validator->fails()){
+                return response()->json($validator->errors()->toJson(), 400);
+        }
+
         $result = $this->getIssue($issue);
 
         if(!isset( $result['status'] ))
@@ -85,9 +94,10 @@ class IssueController extends Controller
         
         $this->toEmitVote($issue,$vote);
 
+        $this->calculateAvg($issue);
+
         return response()->json('vote cast correctly',201);
 
-        
     }
     
     /**
@@ -208,5 +218,51 @@ class IssueController extends Controller
         unset($issue['avg']);
 
         return $issue;
+    }
+    
+    /**
+     * calculateAvg
+     *
+     * @param  mixed $issue
+     * @return void
+     */
+    public function calculateAvg($issue)
+    {
+        $result = $this->getIssue($issue);
+        
+        $total = 0;
+        $numberOfVotes = 0;
+
+        foreach($result['members'] as $member)
+        {
+            if( isset( $member['value'] ) )
+            {
+                $total =+ $member['value'];
+
+                $numberOfVotes++;
+            }
+        }
+
+        $result['avg'] =  $numberOfVotes == 0 ? 0 : $total / $numberOfVotes;
+        
+        Redis::set('issue:'.$issue, json_encode( $result ));
+
+        return $result;
+    }
+
+    public function endVote($issue)
+    {
+        $result = $this->getIssue($issue);
+
+        if(!isset( $result['status'] ))
+            return response()->json('404 Not Found',404);
+        
+        $result['status'] = 'reveal';
+
+        Redis::set('issue:'.$issue, json_encode( $result ));
+
+        $this->calculateAvg($issue);
+
+        return response()->json('the vote is over',200);
     }
 }
