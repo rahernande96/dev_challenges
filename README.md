@@ -246,5 +246,5 @@ $headers = [
 
    - Run sudo docker-compose up -d 
    - Run sudo docker-compose exec php composer install 
-   - Create .env file and copy and paste content from .env.example file
+   - Create an .env file inside the backend folder and copy and paste the contents of the .env.example file
    - Run sudo docker-compose exec php php artisan migrate 
